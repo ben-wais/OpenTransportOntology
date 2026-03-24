@@ -1,0 +1,153 @@
+name: OTO CI - Lint, Release and Pull-Request
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - src/**
+      - scripts/**
+  push:
+    # Release‑Jobs wenn Tags wie v1.2.3 ausgelöst
+    tags: [ 'v*.*.*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (für make)
+        uses: actions/setup-java@v4
+        with:
+          distribution: adopt
+          java-version: '11'
+
+      - name: Build OTO
+        run: |
+          make
+
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/oto
+
+  robot-validation:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download ROBOT 1.9.0
+        run: |
+          wget https://github.com/ontodev/robot/releases/download/v1.9.0/robot.jar -O robot.jar
+
+      - name: Validate profile
+        run: |
+          java -jar robot.jar validate-profile \
+              --input build/oto/$(cat VERSION)/oto-full.ttl \
+              --profile Full -vvv \
+              --output merged-validation.txt
+
+  hermit-consistency:
+    needs: build        # lieber `needs: robot-validation`????
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download HermiT
+        run: |
+          wget https://github.com/owlcs/releases/raw/master/HermiT/org.semanticweb.hermit-packaged-1.4.6.519-SNAPSHOT.jar \
+              -O hermit.jar
+
+      - name: Consistency check
+        run: |
+          OUT=$(java -jar hermit.jar file://$(pwd)/build/oto/$(cat VERSION)/oto-full.ttl -U)
+          if [ "$(echo "$OUT" | tr -d '[:space:]')" = "Classesequivalentto'owl:Nothing':owl:Nothing" ]; then
+            echo "Ontology is consistent."
+            exit 0
+          fi
+          echo "Ontology is inconsistent: $OUT"
+          exit 1
+
+  linted-data:
+    needs: [build, robot-validation, hermit-consistency]
+    runs-on: ubuntu-latest
+    container: dlrdw/linteddata:latest
+    permissions:
+      checks: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run LintedData (JUnit‑Report)
+        run: |
+          LintedData build/oto/$(cat VERSION)/oto-full.ttl --junit linted-data.xml
+
+      - name: Upload JUnit‑report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linteddata-junit
+          path: linted-data.xml
+
+      - name: Publish LintedData‑Check as GitHub‑Check (optional)
+        uses: LouisBrunner/checks-action@v2.0.0
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: LintedData Checks
+          conclusion: ${{ job.status }}
+          output: |
+            {"summary":"LintedData‑Check abgeschlossen"}
+          output_text_description_file: linted-data.md
+
+  deploy:
+    needs: linted-data
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cached JARs
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: '*.jar'
+          key: robot-widoco-cache
+
+      - name: Fetch dependencies (wenn nicht im Cache)
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/ontodev/robot/releases/download/v1.9.7/robot.jar -O robot.jar
+          wget https://github.com/dgarijo/Widoco/releases/download/v1.4.25/widoco-1.4.25-jar-with-dependencies_JDK-17.jar -O widoco.jar
+
+      - name: Save JARs in Cache
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: '*.jar'
+          key: robot-widoco-cache
+
+      - name: Build documentation (Widoco)
+        run: |
+          java -jar widoco.jar \
+            -ontFile build/oto/$(cat VERSION)/oto-full.ttl \
+            -rewriteAll -uniteSections -noPlaceHolderText \
+            -outFolder build/doc
+
+      - name: Rename index file (wie in release.yml)
+        run: mv build/doc/index-en.html build/doc/index.html
+
+      - name: Upload pages artefact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/doc
+
+      - name: Deploy to GitHub Pages
+        id: pages-deploy
+        uses: actions/deploy-pages@v4
