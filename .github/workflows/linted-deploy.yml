@@ -104,6 +104,15 @@ jobs:
           LintedData build/oto/$(cat VERSION)/oto-full.ttl \
           --junit linted-data.xml \
           --markdown linted-data.md || true
+      - name: Upload full LintedData report
+        uses: actions/upload-artifact@v4
+        with:
+          name: linteddata-md
+          path: linted-data.md
+
+      - name: Create small summary for GitHub Check
+        run: |
+          echo "LintedData Check abgeschlossen: $(grep -c '<failure' linted-data.xml) Fehler gefunden" > linted-data-summary.md
 
       - name: Show report
         run: cat linted-data.xml
@@ -121,9 +130,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: LintedData Checks
           conclusion: ${{ job.status }}
-          output: |
-            {"summary":"LintedData‑Check abgeschlossen"}
-          output_text_description_file: linted-data.md
+          output: '{"summary":"LintedData Check abgeschlossen"}'
+          output_text_description_file: linted-data-summary.md
 
   deploy:
     needs: linted-data
