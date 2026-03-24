@@ -83,39 +83,39 @@ jobs:
           echo "Ontology is inconsistent: $OUT"
           exit 1
 
-linted-data:
-  needs: [build, robot-validation, hermit-consistency]
-  runs-on: ubuntu-latest
-  container: dlrdw/linteddata:latest
-  permissions:
-    checks: write
-    contents: read
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+  linted-data:
+    needs: [build, robot-validation, hermit-consistency]
+    runs-on: ubuntu-latest
+    container: dlrdw/linteddata:latest
+    permissions:
+      checks: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Run LintedData Checks
-      run: |
-        LintedData build/oto/$(cat VERSION)/oto-full.ttl \
-          --junit linted-data.xml \
-          --markdown linted-data.md
+      - name: Run LintedData Checks
+        run: |
+          LintedData build/oto/$(cat VERSION)/oto-full.ttl \
+            --junit linted-data.xml \
+            --markdown linted-data.md
 
-    - name: Upload JUnit report as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: linteddata-junit
-        path: linted-data.xml
+      - name: Upload JUnit report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linteddata-junit
+          path: linted-data.xml
 
-    - name: Publish LintedData Check as GitHub Check
-      uses: LouisBrunner/checks-action@v2.0.0
-      if: ${{ !cancelled() }}
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: LintedData Checks
-        conclusion: ${{ job.status }}
-        output: |
-          {"summary":"LintedData Check abgeschlossen"}
-        output_text_description_file: linted-data.md
+      - name: Publish LintedData Check as GitHub Check
+        uses: LouisBrunner/checks-action@v2.0.0
+        if: ${{ !cancelled() }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: LintedData Checks
+          conclusion: ${{ job.status }}
+          output: |
+            {"summary":"LintedData Check abgeschlossen"}
+          output_text_description_file: linted-data.md
 
   deploy:
     needs: linted-data
