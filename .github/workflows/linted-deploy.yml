@@ -176,8 +176,8 @@ jobs:
             -rewriteAll -uniteSections -noPlaceHolderText \
             -outFolder build/doc
 
-      - name: Rename index file (wie in release.yml)
-        run: mv build/doc/index-en.html build/doc/index.html
+      - name: Rename index file
+        run: mv build/oto/doc/index-en.html build/doc/index.html
 
       - name: Upload pages artefact
         id: deployment
