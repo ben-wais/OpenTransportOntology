@@ -101,7 +101,9 @@ jobs:
 
       - name: Run LintedData
         run: |
-          LintedData build/oto/$(cat VERSION)/oto-full.ttl --junit linted-data.xml || true
+          LintedData build/oto/$(cat VERSION)/oto-full.ttl \
+          --junit linted-data.xml \
+          --markdown linted-data.md
 
       - name: Show report
         run: cat linted-data.xml
@@ -112,7 +114,7 @@ jobs:
           name: linteddata-junit
           path: linted-data.xml
 
-      - name: Publish LintedData‑Check as GitHub‑Check (optional)
+      - name: Publish LintedData‑Check as GitHub‑Check  
         uses: LouisBrunner/checks-action@v2.0.0
         if: ${{ !cancelled() }}
         with:
