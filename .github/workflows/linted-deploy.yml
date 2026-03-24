@@ -169,15 +169,16 @@ jobs:
           path: '*.jar'
           key: robot-widoco-cache
 
-      - name: Build documentation (Widoco)
+      - name: build documentation
         run: |
           java -jar widoco.jar \
             -ontFile build/oto/$(cat VERSION)/oto-full.ttl \
-            -rewriteAll -uniteSections -noPlaceHolderText \
-            -outFolder build/doc
-
-      - name: Rename index file
-        run: mv build/oto/doc/index-en.html build/doc/index.html
+            -rewriteAll \
+            -uniteSections \
+            -noPlaceHolderText \
+            -outFolder build/
+      - name: rename index file
+        run: mv build/doc/index-en.html build/doc/index.html
 
       - name: Upload pages artefact
         id: deployment
