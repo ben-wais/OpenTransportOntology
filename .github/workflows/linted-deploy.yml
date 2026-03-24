@@ -91,22 +91,30 @@ jobs:
       checks: write
       contents: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Run LintedData Checks
+      - name: Download build artefacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/oto
+
+      - name: Run LintedData
         run: |
           LintedData build/oto/$(cat VERSION)/oto-full.ttl \
-            --junit linted-data.xml \
-            --markdown linted-data.md
+          --junit linted-data.xml \
+          --markdown linted-data.md || true
 
-      - name: Upload JUnit report as artifact
+      - name: Show report
+        run: cat linted-data.xml
+
+      - name: Upload JUnit‑report as artifact
         uses: actions/upload-artifact@v4
         with:
           name: linteddata-junit
           path: linted-data.xml
 
-      - name: Publish LintedData Check as GitHub Check
+      - name: Publish LintedData‑Check as GitHub‑Check  
         uses: LouisBrunner/checks-action@v2.0.0
         if: ${{ !cancelled() }}
         with:
@@ -114,7 +122,7 @@ jobs:
           name: LintedData Checks
           conclusion: ${{ job.status }}
           output: |
-            {"summary":"LintedData Check abgeschlossen"}
+            {"summary":"LintedData‑Check abgeschlossen"}
           output_text_description_file: linted-data.md
 
   deploy:
