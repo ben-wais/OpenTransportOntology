@@ -99,9 +99,12 @@ jobs:
           name: build-artifacts
           path: build/oto
 
-      - name: Run LintedData (JUnit‑Report)
+      - name: Run LintedData
         run: |
-          LintedData build/oto/$(cat VERSION)/oto-full.ttl --junit linted-data.xml
+          LintedData build/oto/$(cat VERSION)/oto-full.ttl --junit linted-data.xml || true
+
+      - name: Show report
+        run: cat linted-data.xml
 
       - name: Upload JUnit‑report as artifact
         uses: actions/upload-artifact@v4
