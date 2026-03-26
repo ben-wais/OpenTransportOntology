@@ -125,15 +125,19 @@ jobs:
           name: linteddata-junit
           path: linted-data.xml
 
-      - name: Publish LintedData‑Check as GitHub‑Check  
+      - name: Publish LintedData‑Check as GitHub‑Check
         uses: LouisBrunner/checks-action@v2.0.0
-        if: ${{ !cancelled() }}
+        if: always()                     
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: LintedData Checks
-          conclusion: ${{ job.status }}
-          output: '{"summary":"LintedData Check abgeschlossen"}'
-          output_text_description_file: linted-data-summary.md
+          conclusion: ${{ job.status }} # SUCCESS und FAILURE ..
+          output: |
+            {
+              "title": "LintedData‑Ergebnis",
+              "summary": "LintedData Check abgeschlossen",
+              "text": "${{ steps.publish_summary.outputs.content }}"
+            }
 
   deploy:
     needs: linted-data
