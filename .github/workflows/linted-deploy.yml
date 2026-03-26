@@ -103,7 +103,9 @@ jobs:
         run: |
           LintedData build/oto/$(cat VERSION)/oto-full.ttl \
           --junit linted-data.xml \
-          --markdown linted-data.md || true
+          --markdown linted-data.md
+        continue-on-error: true
+        
       - name: Upload full LintedData report
         uses: actions/upload-artifact@v4
         with:
@@ -169,7 +171,7 @@ jobs:
           path: '*.jar'
           key: robot-widoco-cache
 
-      - name: build documentation
+      - name: build documentation ()
         run: |
           java -jar widoco.jar \
             -ontFile build/oto/$(cat VERSION)/oto-full.ttl \
