@@ -57,7 +57,7 @@ jobs:
               --output merged-validation.txt
 
   hermit-consistency:
-    needs: build        # lieber `needs: robot-validation`????
+    needs: robot-validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -101,7 +101,6 @@ jobs:
         run: |
           LintedData build/oto/$(cat VERSION)/oto-full.ttl \
           --markdown linted-data.md
-        continue-on-error: true
 
       - name: Add LintedData results to job summary
         if: ${{ !cancelled() }}
