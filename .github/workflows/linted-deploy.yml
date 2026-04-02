@@ -87,9 +87,7 @@ jobs:
     needs: [build, robot-validation, hermit-consistency]
     runs-on: ubuntu-latest
     container: dlrdw/linteddata:latest
-    permissions:
-      checks: write
-      contents: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -102,42 +100,18 @@ jobs:
       - name: Run LintedData
         run: |
           LintedData build/oto/$(cat VERSION)/oto-full.ttl \
-          --junit linted-data.xml \
           --markdown linted-data.md
         continue-on-error: true
-      
+
       - name: Add LintedData results to job summary
-        if: ${{!cancelled()}}
-        run: head -q c1023k linted-data.md >> $GITHUB_STEP_SUMMARY
-        
-      - name: Upload full LintedData report
+        if: ${{ !cancelled() }}
+        run: head -q -c1023k linted-data.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload full report (optional)
         uses: actions/upload-artifact@v4
         with:
           name: linteddata-md
           path: linted-data.md
-
-      - name: Create small summary for GitHub Check
-        run: |
-          echo "LintedData Check abgeschlossen: $(grep -c '<failure' linted-data.xml) Fehler gefunden" > linted-data-summary.md
-
-      - name: Show report
-        run: cat linted-data.xml
-
-      - name: Upload JUnit‑report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linteddata-junit
-          path: linted-data.xml
-
-      - name: Publish LintedData‑Check as GitHub‑Check  
-        uses: LouisBrunner/checks-action@v2.0.0
-        if: ${{ !cancelled() }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: LintedData Checks
-          conclusion: ${{ job.status }}
-          output: '{"summary":"LintedData Check abgeschlossen"}'
-          output_text_description_file: linted-data-summary.md
 
   deploy:
     needs: linted-data
