@@ -105,6 +105,10 @@ jobs:
           --junit linted-data.xml \
           --markdown linted-data.md
         continue-on-error: true
+      
+      - name: Add LintedData results to job summary
+        if: ${{!cancelled()}}
+        run: head -q c1023k linted-data.md >> $GITHUB_STEP_SUMMARY
         
       - name: Upload full LintedData report
         uses: actions/upload-artifact@v4
@@ -125,19 +129,15 @@ jobs:
           name: linteddata-junit
           path: linted-data.xml
 
-      - name: Publish LintedData‑Check as GitHub‑Check
+      - name: Publish LintedData‑Check as GitHub‑Check  
         uses: LouisBrunner/checks-action@v2.0.0
-        if: always()                     
+        if: ${{ !cancelled() }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: LintedData Checks
-          conclusion: ${{ job.status }} # SUCCESS und FAILURE ..
-          output: |
-            {
-              "title": "LintedData‑Ergebnis",
-              "summary": "LintedData Check abgeschlossen",
-              "text": "${{ steps.publish_summary.outputs.content }}"
-            }
+          conclusion: ${{ job.status }}
+          output: '{"summary":"LintedData Check abgeschlossen"}'
+          output_text_description_file: linted-data-summary.md
 
   deploy:
     needs: linted-data
