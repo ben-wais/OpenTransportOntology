@@ -9,6 +9,7 @@ on:
   push:
     # Release‑Jobs wenn Tags wie v1.2.3 ausgelöst
     tags: [ 'v*.*.*' ]
+    branches: [ '**' ]
 
 jobs:
   build:
