@@ -107,6 +107,7 @@ jobs:
         run: head -q -c1023k linted-data.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload full report (optional)
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: linteddata-md
