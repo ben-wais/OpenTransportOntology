@@ -101,6 +101,7 @@ jobs:
       - name: Run LintedData
         run: |
           LintedData build/oto/$(cat VERSION)/oto-full.ttl \
+          --config linted-data-config.yml \
           --markdown linted-data.md
 
       - name: Add LintedData results to job summary
