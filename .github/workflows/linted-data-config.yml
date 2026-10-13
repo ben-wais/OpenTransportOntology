@@ -1,3 +1,0 @@
-checks:
-  RDF:
-    DuplicatedDefinitionsCheck: false
