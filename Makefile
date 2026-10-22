@@ -1,8 +1,10 @@
 ONTOLOGY_NAME := oto
-IRI_NAME := OpenTransportOntology
+IRI_NAME := oto
 
-IRI_PLACEHOLDER := http:\/\/w3id.org\/
-IRI_BASE := https:\/\/openenergyplatform.github.io\/
+# dont replace IRIs
+IRI_PLACEHOLDER := https:\/\/w3id.org\/
+IRI_BASE := https:\/\/w3id.org\/
+#IRI_BASE := https:\/\/openenergyplatform.github.io\/
 
 IRI_ONTOLOGY_PLACEHOLDER := $(IRI_PLACEHOLDER)$(ONTOLOGY_NAME)
 IRI_ONTOLOGY := $(IRI_BASE)$(IRI_NAME)
@@ -114,9 +116,9 @@ imports: ${TMP} ${TMP}/catalog.xml $(IMPORTS) $(IMPORTS)/bfo_classes_only.owl $(
 
 base: | directories imports $(VERSIONDIR)/catalog-v001.xml robot.jar  $(TTL_COPY) $(OWL_COPY) $(OWLVERSION) $(TTL_TRANSLATE)
 
-merge: | $(VERSIONDIR)/$(ONTOLOGY_NAME)-full.ttl 
+merge: | $(VERSIONDIR)/$(ONTOLOGY_NAME)-full.ttl
 
-owx: | $(VERSIONDIR)/$(ONTOLOGY_NAME)-full.owx 
+owx: | $(VERSIONDIR)/$(ONTOLOGY_NAME)-full.owx
 
 clean:
 	- $(RM) -r $(VERSIONDIR)
@@ -129,7 +131,7 @@ directories: ${VERSIONDIR}/imports ${VERSIONDIR}/modules ${TMP} $(VERSIONDIR)/ow
 
 $(IMPORTS):
 	${MKDIR_P} ${IMPORTS}
-	
+
 $(IMPORTS)/bfo_classes_only.owl:
 	curl -L -o $@ $(BFO_SOURCE)
 
@@ -158,7 +160,7 @@ $(VERSIONDIR)/catalog-v001.xml: $(ONTOLOGY_SOURCE)/catalog-v001.xml
 	$(SED) -i -E "s/edits\//modules\//m" $@
 
 $(ROBOT_PATH): | build
-	curl -L -o $@ https://github.com/ontodev/robot/releases/download/v1.9.5/robot.jar
+	curl -L -o $@ https://github.com/ontodev/robot/releases/download/v1.9.10/robot.jar
 
 $(VERSIONDIR)/owl/%.owl: $(VERSIONDIR)/%.ttl
 	$(call translate_to_owl,$@,$<)
